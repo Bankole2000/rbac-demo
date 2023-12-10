@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AppSetting {
+  id         String   @unique
+  name       String   @id @unique
+  type       DataType
+  boolean    Boolean? @default(false)
+  number     Int?
+  string     String?
+  list       String[]
+  object     Json?
+  objectList Json[]
+}
+
+enum DataType {
+  boolean
+  number
+  string
+  list
+  object
+  objectList
+}
+
+model User {
+  id            String               @id @default(cuid())
+  email         String?              @unique
+  verified      Boolean?             @default(false) @db.Boolean
+  username      String?              @unique
+  name          String?
+  roles         Role[]               @relation("UserHasRoles")
+  accounts      Account[]
+  sessions      Session[]
+  beneficiaries UserHasBeneficiary[] @relation("Benefactor")
+  featureBan    UserFeatureBan[]
+  created       DateTime             @default(now())
+  updated       DateTime?            @updatedAt
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isValid     Boolean   @default(true)
+  loggedInAt  DateTime  @default(now())
+  loggedOutAt DateTime?
+}
+
+model UserHasBeneficiary {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("Benefactor", fields: [userId], references: [id], onDelete: Cascade)
+  accountId String
+  account   Account  @relation("BeneficiaryAccount", fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Account {
+  id                String               @id @default(cuid())
+  accountNumber     String
+  bankId            String
+  bank              Bank                 @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  userId            String
+  balance           Int                  @default(0)
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
+  receivedTransfers Transfer[]           @relation("ReceivedTransfers")
+  sentTransfers     Transfer[]           @relation("sentTransfers")
+  isBeneficiaryTo   UserHasBeneficiary[] @relation("BeneficiaryAccount")
+  createdAt         DateTime             @default(now())
+}
+
+model Bank {
+  id       String    @id @default(cuid())
+  name     String
+  code     String?
+  accounts Account[]
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  accountId   String
+  account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  description String?
+  amount      Int
+  transferId  String?
+  transfer    Transfer?       @relation("TransferTransactions", fields: [transferId], references: [id], onDelete: Cascade)
+  type        TransactionType
+  createdAt   DateTime        @default(now())
+}
+
+model Transfer {
+  id                   String         @id @default(cuid())
+  originAccountId      String
+  originAccount        Account        @relation("sentTransfers", fields: [originAccountId], references: [id], onDelete: Cascade)
+  destinationAccountId String
+  destinationAccount   Account        @relation("ReceivedTransfers", fields: [destinationAccountId], references: [id], onDelete: Cascade)
+  amount               Int
+  description          String?
+  transactions         Transaction[]  @relation("TransferTransactions")
+  status               TransferStatus
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+enum TransferStatus {
+  PENDING
+  SUCCESSFUL
+  REVERSED
+  FAILED
+}
+
+// enum AccountStatus {
+//   NEW
+//   BIO_INCOMPLETE
+//   BVN_REQUIRED
+//   NEEDS_ACCOUNT
+//   COMPLETE
+// }
+
+model Scope {
+  id          String    @unique
+  name        String    @id @unique
+  description String?
+  features    Feature[]
+  active      Boolean
+}
+
+model Feature {
+  id           String           @unique
+  name         String           @id @unique
+  description  String?
+  featureFlags FeatureFlag[]
+  scopeData    Scope            @relation(fields: [scope], references: [name])
+  scope        String
+  active       Boolean
+  userBans     UserFeatureBan[]
+}
+
+model FeatureFlag {
+  id          String    @unique
+  name        String
+  description String?
+  featureData Feature   @relation(fields: [feature], references: [name])
+  service     Service[] @default([BACKEND])
+  feature     String
+  active      Boolean
+
+  @@id([name, feature])
+}
+
+enum Service {
+  BACKEND
+  FRONTEND
+}
+
+model Role {
+  id          String           @unique
+  name        String           @id @unique
+  description String?
+  permissions RolePermission[]
+  users       User[]           @relation("UserHasRoles")
+}
+
+model Resource {
+  id          String           @unique
+  name        String           @id @unique
+  description String?
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id           String   @unique
+  roleData     Role     @relation(fields: [role], references: [name])
+  role         String
+  resourceData Resource @relation(fields: [resource], references: [name])
+  resource     String
+  create       Boolean
+  readOwn      Boolean
+  readAny      Boolean
+  updateOwn    Boolean
+  updateAny    Boolean
+  deleteOwn    Boolean
+  deleteAny    Boolean
+
+  @@id([role, resource])
+}
+
+model UserFeatureBan {
+  id          String   @unique
+  userData    User     @relation(fields: [user], references: [id])
+  user        String
+  featureData Feature  @relation(fields: [feature], references: [name])
+  feature     String
+  expiresAt   DateTime
+
+  @@id([user, feature])
+}
