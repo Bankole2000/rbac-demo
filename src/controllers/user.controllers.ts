@@ -1,5 +1,6 @@
 import {Request, Response} from "express";
 import { httpResponses } from "@tonictech/common"
+import UserPGService from "../dao/postgres/user.pg";
 
 export const getUserAccountsHandler = async(req: Request, res: Response) => {
   const sr = httpResponses.OK({message: "Not yet implemented"});

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { defaultHandler } from "../controllers/default.controllers";
 import { createNewAccountHandler, deleteAccountHandler, getBeneficiariesHandler, getUserAccountsHandler, getUserTransactionsHandler, removeBeneficiariesHandler } from "../controllers/user.controllers";
 import { checkFeatureFlag } from "../middleware/settings";
+import { loadAccount } from "../controllers/account.controllers";
 
 const userRouter = Router({mergeParams: true});
 
@@ -11,5 +12,7 @@ userRouter.delete('/accounts/:accountId', checkFeatureFlag({feature: 'LOGIN', fl
 userRouter.get('/transactions', checkFeatureFlag({feature: 'LOGIN', flag: 'EMAIL'}), getUserTransactionsHandler);
 userRouter.get('/beneficiaries', checkFeatureFlag({feature: 'LOGIN', flag: 'EMAIL'}), getBeneficiariesHandler);
 userRouter.delete('/beneficiary/:accountId', checkFeatureFlag({feature: 'LOGIN', flag: 'EMAIL'}), removeBeneficiariesHandler);
+
+userRouter.param('accountId', loadAccount);
 
 export default userRouter
