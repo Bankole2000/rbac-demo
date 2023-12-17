@@ -77,6 +77,27 @@ export default class UserPGService {
     return this
   }
 
+  async findUserByUsername({username}: {username: string}) {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          username
+        }
+      })
+      if (!user){
+        this.response = responses.NotFound({message: 'User not found'})
+        this.user = null
+      }
+      this.user = user;
+      this.response = responses.OK({data: user})
+    } catch (error: any) {
+      console.log({error})
+      this.user = null
+      this.response = responses.InternalServerError({});
+    }
+    return this
+  }
+
 /**
  * @description Creates new user record in postgres
  * @method function

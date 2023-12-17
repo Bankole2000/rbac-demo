@@ -7,13 +7,12 @@ export default class UserPBService {
   pb: ReturnType<typeof getPB>;
   records: any;
   user: any;
-  response: ServiceResponse | null;
+  response?: ServiceResponse;
 
   constructor() {
     this.pb = getPB()
     this.records = [];
     this.user = null;
-    this.response = null;
   }
 
   async findUserById({userId}: {userId: string}) {

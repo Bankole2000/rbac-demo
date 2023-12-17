@@ -1,4 +1,4 @@
-import { httpResponses as responses, ServiceResponse } from "@tonictech/common";
+import { httpResponses, httpResponses as responses, ServiceResponse } from "@tonictech/common";
 import { PrismaClient, AppSetting, FeatureFlag, Feature, Resource, Role, RolePermission, Prisma, Scope } from "@prisma/client";
 
 import prisma from "../../lib/prisma";
@@ -66,6 +66,7 @@ export default class SettingsPGService {
     this.roleFields = [
       'id',
       'name',
+      'isDefault',
       'description',
     ];
     this.scopeFields = [
@@ -157,17 +158,76 @@ export default class SettingsPGService {
   async getScopes({field = '', values = []}: {field?: string, values?: string[]}){
     try {
       this.scopes = !field || !values ? 
-        await this.prisma.scope.findMany({}) :
+        await this.prisma.scope.findMany({
+          include: {
+            features: {
+              include: {
+                featureFlags: true
+              }
+            }
+          }
+        }) :
         await this.prisma.scope.findMany({
           where: {
             [field]: {
               in: values
+            }
+          },
+          include: {
+            features: {
+              include: {
+                featureFlags: true
+              }
             }
           }
         })
     } catch (error: any) {
       console.log({error});
       this.scopes = []
+    }
+    return this
+  }
+
+  async getScopeDetails({name}: {name: string}) {
+    try {
+      let data;
+      const scope = await this.prisma.scope.findUnique({
+        where: {
+          name,
+        },
+        include: {
+          features: {
+            include: {
+              featureFlags: true
+            }
+          }
+        }
+      })
+      if(scope){
+        const features: {[key: string]: any} = {};
+        const featureData = scope.features;
+        featureData.forEach((feat: any) => {
+          const featureFlags: {[key: string]: any} = {}
+          const featureFlagData = feat.featureFlags;
+          featureFlagData.forEach((flag: any) => {
+            featureFlags[flag.name] = {
+              ...flag,
+            }
+          })
+          features[feat.name] = {
+            ...feat, 
+            featureFlags
+          }
+        });
+        data = {
+          ...scope,
+          features
+        }
+      }
+      this.response = data ? httpResponses.OK({data}) : httpResponses.NotFound({data});
+    } catch (error: any) {
+      console.log({error})
+      this.response = httpResponses.InternalServerError({errMessage: error.message, error});
     }
     return this
   }
@@ -392,7 +452,7 @@ export default class SettingsPGService {
     return this
   }
 
-  async getRoles({field = '', values = []}: {field?: string, values?: string[]}){
+  async getRoles({field = '', values = []}: {field?: string, values?: any[]}){
     try {
       this.roles = !field && !values.length ? 
         await this.prisma.role.findMany({}) :
@@ -403,6 +463,24 @@ export default class SettingsPGService {
             }
           }
         })
+      console.log({roles: this.roles, field, values})
+    } catch (error: any) {
+      console.log({error});
+      this.roles = []
+    }
+    return this
+  }
+
+  async filterRoles(filter: {[key: string]: any}) {
+    try {
+      this.roles = !Object.keys(filter).length ? 
+        await this.prisma.role.findMany({}) :
+        await this.prisma.role.findMany({
+          where: {
+            ...filter
+          }
+        })
+      console.log({roles: this.roles, filter})
     } catch (error: any) {
       console.log({error});
       this.roles = []

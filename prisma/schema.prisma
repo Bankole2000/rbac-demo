@@ -172,6 +172,7 @@ model Role {
   id          String           @unique
   name        String           @id @unique
   description String?
+  isDefault   Boolean          @default(false) @db.Boolean
   permissions RolePermission[]
   users       User[]           @relation("UserHasRoles")
 }

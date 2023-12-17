@@ -1,5 +1,5 @@
 import { httpResponses } from "@tonictech/common";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 export const getAccountDetailsHandler = async (req: Request, res: Response) => {
   const sr = httpResponses.OK({message: 'Not yet implemented'})
@@ -29,5 +29,13 @@ export const accountWithdrawalHandler = async (req: Request, res: Response) => {
 export const transferHandler = async (req: Request, res: Response) => {
   const sr = httpResponses.OK({message: 'Not yet implemented'})
   return res.status(sr.statusCode).send(sr);
+}
+
+export const loadAccount = async (req: Request, res: Response, next: NextFunction, userId: string) => {
+  try {
+    
+  } catch (error) {
+    
+  }
 }
 
