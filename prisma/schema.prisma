@@ -36,6 +36,8 @@ model User {
   email         String?              @unique
   verified      Boolean?             @default(false) @db.Boolean
   username      String?              @unique
+  phone            String?
+  phoneData        Json?              @default("{}") @db.Json
   name          String?
   roles         Role[]               @relation("UserHasRoles")
   accounts      Account[]

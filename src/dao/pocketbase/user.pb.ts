@@ -84,12 +84,12 @@ export default class UserPBService {
 
   async authenticateUser({identity, password}: {identity: string, password: string}) {
     try {
-      await this.pb.collection('users').authWithPassword(identity, password);
+      const authData = await this.pb.collection('users').authWithPassword(identity, password);
       console.log(this.pb.authStore.isValid);
       console.log(this.pb.authStore.token);
       console.log(this.pb.authStore.model.id);
       this.user = this.pb.authStore.model;
-      this.response = httpResponses.OK({message: 'Logged in successfully', data: this.pb.authStore});
+      this.response = httpResponses.OK({message: 'Logged in successfully', data: authData});
     } catch (error: any) {
       console.log({error})
       this.user = null;

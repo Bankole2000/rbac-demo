@@ -12,7 +12,7 @@ export const getAppSettings = async(req: Request, res: Response, next: NextFunct
   })
   res.locals.settings = settings;
   res.locals.ss = settingsPG;
-
+  console.log({settings});
   next();
 }
 

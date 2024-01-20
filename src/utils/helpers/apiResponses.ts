@@ -10,7 +10,7 @@ enum StatusTypes {
   TooManyRequests = 'TooManyRequests',
   MethodNotAllowed = 'MethodNotAllowed',
   ExpectationFailed = 'ExpectationFailed',
-  InternalServerErrorError = 'InternalServerErrorError',
+  InternalServerError = 'InternalServerError',
   UnProcessableEntity = 'UnProcessableEntity',
   UnSupportedMediaType = 'UnSupportedMediaType'
 }
@@ -25,7 +25,7 @@ const httpStatus: {[key: string]: {statusCode: number, message: string}} = {
   [StatusTypes.TooManyRequests]: {statusCode: 429, message: 'Too many requests'},
   [StatusTypes.MethodNotAllowed]: {statusCode: 405, message: 'Method Not Allowed'},
   [StatusTypes.ExpectationFailed]: {statusCode: 417, message: 'Expectation Failed'},
-  [StatusTypes.InternalServerErrorError]: {statusCode: 500, message: 'Internal Server Error'},
+  [StatusTypes.InternalServerError]: {statusCode: 500, message: 'Internal Server Error'},
   [StatusTypes.UnProcessableEntity]: {statusCode: 422, message: 'Unprocessable Entity'},
   [StatusTypes.UnSupportedMediaType]: {statusCode: 415, message: 'Unsupported Media Type'}
 }
@@ -55,9 +55,9 @@ Object.keys(StatusTypes).forEach(status => {
     message = httpStatus[status].message,
     data = {},
     success = true,
-    error = null,
-    errMessage = null,
-    fix = 'please contact support',
+    error = httpStatus[status].statusCode < 300 ? null : httpStatus[status].message,
+    errMessage = httpStatus[status].statusCode < 300 ? null : status,
+    fix = httpStatus[status].statusCode < 300 ? null : 'please contact support',
     newAccessToken = null
   }) => {
     return new ServiceResponse(

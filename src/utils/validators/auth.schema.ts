@@ -11,6 +11,32 @@ export const emailRequiredSchema = object({
 
 export const registerFields = ['email', 'password', 'username'];
 
+export const registerPhoneSchema = object({
+  body: object({
+    countryCode: string({
+      required_error: 'Country Code is required',
+    }).min(2, 'Country Code be at least 2 characters')
+    .max(3, 'Country Code be at least 3 characters')
+    .refine((data) => isNotEmpty(data), 'Password cannot be empty'),
+    phone: string({
+      required_error: 'Phone number is required',
+    }).refine((data) => isNotEmpty(data), 'Password cannot be empty'),
+    username: string({
+      required_error: 'Username is required',
+    }).refine((data) => isValidUserName(data), 'Username can only have lowercase (small) letters, numbers, and underscores'),
+    password: string({
+      required_error: 'Password is required',
+    }).min(8, 'Password must be at least 8 characters')
+      .refine((data) => isNotEmpty(data), 'Password cannot be empty'),
+    confirmPassword: string({
+      required_error: 'Confirm Password is required',
+    }),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+});
+
 export const registerSchema = object({
   body: object({
     email: string({

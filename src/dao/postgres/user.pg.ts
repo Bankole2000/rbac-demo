@@ -25,7 +25,9 @@ export default class UserPGService {
       'username',
       'name',
       'created',
-      'updated'
+      'updated',
+      'phone',
+      'phoneData'
     ]
   }
 
@@ -90,6 +92,52 @@ export default class UserPGService {
       }
       this.user = user;
       this.response = responses.OK({data: user})
+    } catch (error: any) {
+      console.log({error})
+      this.user = null
+      this.response = responses.InternalServerError({});
+    }
+    return this
+  }
+
+  async findUserByPhoneNumber({phone}: {phone: string}) {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          phone
+        }
+      })
+      if (!user){
+        this.response = responses.NotFound({message: 'User not found'})
+        this.user = null
+      }
+      this.user = user;
+      this.response = responses.OK({data: user})
+    } catch (error: any) {
+      console.log({error})
+      this.response = responses.InternalServerError({});
+    }
+    return this
+  }
+
+  async getUserDetails({userId}: {userId: string}) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId
+        },
+        include: {
+          roles: true,
+          _count: {
+            select: {
+              accounts: true,
+              beneficiaries: true,
+            }
+          }
+        }
+      })
+      this.user = user;
+      this.response = user ? responses.OK({data: user}) : responses.NotFound({data: null})
     } catch (error: any) {
       console.log({error})
       this.user = null
@@ -165,5 +213,52 @@ export default class UserPGService {
       this.response = responses.InternalServerError({message: 'Error deleting user', errMessage: error.message, error});
     }
     return this
+  }
+
+  async createUserSession({userId}: {userId: string}) {
+    try {
+      const newSession = await this.prisma.session.create({
+        data: {
+          userId
+        },
+        include: {
+          user: true
+        }
+      });
+      if (newSession) {
+        return { data: newSession, error: null, code: 200 };
+      }
+      return { data: null, error: 'Error creating user session', code: 400 };
+    } catch (error: any) {
+      console.log({ error });
+      return { data: null, error, code: 500 };
+    }
+  }
+
+  async findUserSession({userId, sessionId}: {userId: string, sessionId: string}){
+    try {
+      const session = await this.prisma.session.findFirst({
+        where: {
+          AND: [
+            {
+              id: sessionId,
+            },
+            {
+              userId
+            }
+          ]
+        },
+        include: {
+          user: true
+        }
+      });
+      if (session) {
+        return { data: session, error: null, code: 200 };
+      }
+      return { data: session, error: 'Session not found', code: 404 };
+    } catch (error: any) {
+      console.log({ error });
+      return { data: null, error, code: 500 };
+    }
   }
 }
