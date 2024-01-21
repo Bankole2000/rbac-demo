@@ -215,11 +215,12 @@ export default class UserPGService {
     return this
   }
 
-  async createUserSession({userId}: {userId: string}) {
+  async createUserSession({userId, data = {}}: {userId: string, data: any}) {
     try {
       const newSession = await this.prisma.session.create({
         data: {
-          userId
+          userId,
+          data
         },
         include: {
           user: true

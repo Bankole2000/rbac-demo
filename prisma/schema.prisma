@@ -53,6 +53,7 @@ model Session {
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   isValid     Boolean   @default(true)
+  data        Json?     @default("{}") @db.Json
   loggedInAt  DateTime  @default(now())
   loggedOutAt DateTime?
 }

@@ -25,7 +25,7 @@ export const emailLoginHandler = async (req: Request, res: Response) => {
     httpResponses.BadRequest({message: 'Invalid email or password', error: sr.error as string, errMessage: sr.errMessage});
   if (sr.statusCode > 299) return res.status(sr.statusCode).send(sr);
   const {record: user, token} = sr.data;
-  const {data: newSession} = await us.createUserSession({userId: user.id})
+  const {data: newSession} = await us.createUserSession({userId: user.id, data: {token}})
   if(!newSession){
     const sr = httpResponses.InternalServerError({message: 'Error generating session'})
     return res.status(sr.statusCode).send(sr);
@@ -46,9 +46,9 @@ export const emailLoginHandler = async (req: Request, res: Response) => {
     httpOnly: true,
     maxAge: parseInt(config.self.refreshTokenTTLMS || '86400000', 10),
   })
-  const sessionData = {userId: loggedInUser.id, sessionId: newSession.id, pbToken: token}
+  const sessionData = {userId: loggedInUser.id, sessionId: newSession.id, data: newSession.data, loggedInUser}
   await cs
-    .formatKey({resource: 'session', identifier: newSession.id})
+    .formatKey({resource: 'session', identifier: `${loggedInUser.id}_${newSession.id}`})
     .setKey({key: cs.formattedKey as string, data: sessionData, expiration: Number(+(config.self.accessTokenTTLMS || 3600000) / 1000)})
   const rs = httpResponses.OK({message: 'Logged In Successfully', data: {user: loggedInUser, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, pbToken: token, session: newSession}})
   return res.status(rs.statusCode).send(rs)
