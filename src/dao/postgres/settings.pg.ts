@@ -21,6 +21,7 @@ export default class SettingsPGService {
   roleFields: string[];
   rolePermissionFields: string[];
   scopeFields: string[];
+  userFeatureBanFields: string[];
   
   constructor(){
     this.prisma = prisma;
@@ -86,7 +87,8 @@ export default class SettingsPGService {
       'updateAny',
       'deleteOwn',
       'deleteAny'
-    ]
+    ];
+    this.userFeatureBanFields = ['id', 'user', 'feature']
   }
 
   async getAppSettings({field = '', values = []}: {field?: string, values?: string[]}){
@@ -661,6 +663,54 @@ export default class SettingsPGService {
         }
       })
       this.response = responses.OK({data: deletedRolePermission});
+    } catch (error: any) {
+      console.log({error})
+      this.response = responses.InternalServerError({data: null, errMessage: error.message, error})
+    }
+    return this
+  }
+
+  async createUserFeatureBan({userFeatureBanData}: {userFeatureBanData: Prisma.UserFeatureBanCreateInput}) {
+    try {
+      const newUserFeatureBan = await this.prisma.userFeatureBan.create({
+        data: {
+          ...userFeatureBanData
+        }
+      })
+      this.response = responses.OK({data: newUserFeatureBan});
+    } catch (error: any) {
+      console.log({error})
+      this.response = responses.InternalServerError({data: null, errMessage: error.message, error})
+    }
+    return this
+  }
+
+  async updateUserFeatureBan({id, data}: {id: string, data: Prisma.UserFeatureBanUpdateInput}) {
+    try {
+      const updatedUserFeatureBan = await this.prisma.userFeatureBan.update({
+        where: {
+          id
+        },
+        data: {
+          ...data
+        }
+      })
+      this.response = responses.OK({data: updatedUserFeatureBan});
+    } catch (error: any) {
+      console.log({error})
+      this.response = responses.InternalServerError({data: null, errMessage: error.message, error})
+    }
+    return this
+  }
+
+  async deleteUserFeatureBan({id}: {id: string}){
+    try {
+      const deletedUserFeatureBan = await this.prisma.userFeatureBan.delete({
+        where: {
+          id
+        }
+      })
+      this.response = responses.OK({data: deletedUserFeatureBan});
     } catch (error: any) {
       console.log({error})
       this.response = responses.InternalServerError({data: null, errMessage: error.message, error})

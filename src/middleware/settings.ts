@@ -85,3 +85,27 @@ export const featFlag = ({feature, flag, scope}: {feature: string, flag: string,
   if(!ff.active) return {message: 'This action is currently disabled', allow: ff.active};
   return {allow: true, message: ''};
 }
+
+export const getUserRolePermissions = async(req: Request, res: Response, next: NextFunction) => {
+  const ss = new SettingsPGService();
+  const userPermissions: {[key: string]: any} = {};
+  if(res.locals.user){
+    const rolePermissions = (await ss.getRolePermissions({field: 'role', values: res.locals.user.roles})).rolePermissions
+    rolePermissions.forEach(r => {
+      if(userPermissions[r.resource]){
+        const currentPerms = Object.values(userPermissions[r.resource]).filter(x => x === true);
+        const newPerms = Object.values(r).filter(x => x === true)
+        userPermissions[r.resource] = currentPerms.length >= newPerms.length ? userPermissions[r.resource] : r
+      } else {
+        userPermissions[r.resource] = r
+      }
+    })
+    console.log({rolePermissions, userPermissions});
+  }
+  return next()
+}
+
+export const getUserFeatureBans = async (req: Request, res: Response, next: NextFunction) => {
+  const ss = new SettingsPGService();
+  // const featureBans = ss.get
+}

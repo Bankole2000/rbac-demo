@@ -254,6 +254,21 @@ const ROLE_PERMISSION_DELETED = async (data: any) => {
   console.log('role permission deleted', data);
 }
 
+const USER_FEATURE_BAN_CREATED = async (data: any) => {
+  console.log('user feature ban created', data);
+  let ufbData = sanitizeData(settingsPg.userFeatureBanFields, data.record)
+  const existingFeatures = await settingsPg.getFeatures({field: 'id', values: [ufbData.feature]})
+  console.log({existingFeatures, ufbData});
+}
+
+const USER_FEATURE_BAN_DELETED = async (data: any) => {
+  console.log('user feature ban deleted', data);
+}
+
+const USER_FEATURE_BAN_UPDATED = async (data: any) => {
+  console.log('user feature ban updated', data);
+}
+
 const appSettingEventHandlers = {
   [eventTypes.CREATED]: APP_SETTING_CREATED,
   [eventTypes.UPDATED]: APP_SETTING_UPDATED,
@@ -294,6 +309,12 @@ const rolePermissionEventHandlers = {
   [eventTypes.CREATED]: ROLE_PERMISSION_CREATED,
   [eventTypes.UPDATED]: ROLE_PERMISSION_UPDATED,
   [eventTypes.DELETED]: ROLE_PERMISSION_DELETED,
+}
+
+const userFeatureBanEventHandlers = {
+  [eventTypes.CREATED]: USER_FEATURE_BAN_CREATED,
+  [eventTypes.UPDATED]: USER_FEATURE_BAN_UPDATED,
+  [eventTypes.DELETED]: USER_FEATURE_BAN_DELETED
 }
 
 export const APP_SETTING_EVENTS = async (message: any) => {
@@ -342,5 +363,12 @@ export const ROLE_PERMISSION_EVENTS = async (message: any) => {
   const {data} = message;
   if(Object.keys(eventTypes).includes(data.action)){
     await rolePermissionEventHandlers[data.action](data);
+  }
+}
+
+export const USER_FEATURE_BAN_EVENTS = async (message: any) => {
+  const {data} = message;
+  if(Object.keys(eventTypes).includes(data.action)){
+    await userFeatureBanEventHandlers[data.action](data);
   }
 }

@@ -1,4 +1,4 @@
-import { ServiceResponse } from "@tonictech/common";
+import { httpResponses, ServiceResponse } from "@tonictech/common";
 import { NextFunction, Request, Response } from "express";
 import CacheService from "../dao/cache";
 import UserPGService from "../dao/postgres/user.pg";
@@ -89,5 +89,7 @@ export const getUserIfLoggedIn = async(req: Request, res: Response, next: NextFu
 }
 
 export const requireAuth = async(req: Request, res: Response, next: NextFunction) => {
-
+  if(res.locals.user) return next();
+  const sr = httpResponses.Unauthorized({message: 'You need to be logged in to perform this action'})
+  return res.status(sr.statusCode).send(sr);
 }
