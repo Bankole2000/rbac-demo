@@ -64,6 +64,7 @@ export const getScope = ({scope}: {scope: string}) => async (_req: Request, res:
 }
 
 export const checkFeatureFlag = ({feature, flag}: {feature: string, flag: string}) => async (_req: Request, res: Response, next: NextFunction) => {
+  const ss = new SettingsPGService();
   // const feat = res.locals.scope['features'][feature];
   // const ff = feat['featureFlags'][flag];
   // if(!ff.active) return {message: 'This action is currently disabled', allow: ff.active};
@@ -71,6 +72,14 @@ export const checkFeatureFlag = ({feature, flag}: {feature: string, flag: string
   // return {allow: true, message: ''};
   const result = featFlag({feature, flag, scope: res.locals.scope});
   console.log({result})
+  if(res.locals.user){
+    const userFeatureBan = (await ss.findUserFeatureBan({userId: res.locals.user.id as string, feature, active: true})).response?.data
+    console.log({userFeatureBan});
+    if(userFeatureBan){
+      result.allow = false
+      result.message = `You have been ${userFeatureBan.expiresAt ? 'temporarily suspended': 'banned'} from accessing this feature`
+    }
+  }
   if(result.allow) return next();
   const sr = httpResponses.Forbidden({message: result.message, data: {feature, flag}})
   return res.status(sr.statusCode).send(sr);
@@ -107,5 +116,6 @@ export const getUserRolePermissions = async(req: Request, res: Response, next: N
 
 export const getUserFeatureBans = async (req: Request, res: Response, next: NextFunction) => {
   const ss = new SettingsPGService();
+  return next()
   // const featureBans = ss.get
 }

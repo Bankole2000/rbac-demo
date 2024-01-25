@@ -67,6 +67,7 @@ export const getUserIfLoggedIn = async(req: Request, res: Response, next: NextFu
   }
   if(expired && refreshToken){
     const { sessionData } = await getSessionFromRefreshToken(refreshToken);
+    console.log({sessionData})
     if (sessionData){
       const {data: userData} = (await us.findUserById({userId: sessionData.userId})).response as ServiceResponse
 
@@ -79,11 +80,12 @@ export const getUserIfLoggedIn = async(req: Request, res: Response, next: NextFu
         .formatKey({resource: 'session', identifier: `${userData.id}_${sessionData.id}`})
         .setKey({key: cs.formattedKey as string, data: newSessionData, expiration: Number(+(config.self.accessTokenTTLMS || 3600000) / 1000)})
       const {data: tokens} = await generateTokens({userId: userData.id, sessionId: sessionData.id})
+      console.log({tokens})
       res.locals.user = userData;
       res.locals.newAccessToken = tokens?.accessToken
       return next()
     }
-    
+    console.log('line 86')
     return next();
   }
 }

@@ -2,6 +2,7 @@ import { httpResponses, httpResponses as responses, ServiceResponse } from "@ton
 import { PrismaClient, AppSetting, FeatureFlag, Feature, Resource, Role, RolePermission, Prisma, Scope } from "@prisma/client";
 
 import prisma from "../../lib/prisma";
+import { date } from "zod";
 
 export default class SettingsPGService {
   prisma: PrismaClient;
@@ -88,7 +89,7 @@ export default class SettingsPGService {
       'deleteOwn',
       'deleteAny'
     ];
-    this.userFeatureBanFields = ['id', 'user', 'feature']
+    this.userFeatureBanFields = ['id', 'user', 'feature', 'expiresAt', 'created', 'updated']
   }
 
   async getAppSettings({field = '', values = []}: {field?: string, values?: string[]}){
@@ -670,6 +671,31 @@ export default class SettingsPGService {
     return this
   }
 
+  async findUserFeatureBan({userId, feature, active = false}: {userId: string, feature: string, active?: boolean}) {
+    const filters: {[key: string]: any}[] = [{user: userId},{feature}]
+    if (active) {
+      filters.push({expiresAt: {gte: new Date().toISOString()}})
+    }
+    try {
+      const userFeatureBan = await this.prisma.userFeatureBan.findFirst({
+        where: {
+          AND: [
+            ...filters
+          ]
+        }
+      })
+      if(userFeatureBan){
+        this.response = responses.NotFound({message: 'User feature ban Not found', data: userFeatureBan})
+      } else {
+        this.response = responses.OK({data: userFeatureBan});
+      }
+    } catch (error: any) {
+      console.log({error})
+      this.response = responses.InternalServerError({data: null, errMessage: error.message, error})
+    }
+    return this
+  }
+
   async createUserFeatureBan({userFeatureBanData}: {userFeatureBanData: Prisma.UserFeatureBanCreateInput}) {
     try {
       const newUserFeatureBan = await this.prisma.userFeatureBan.create({
@@ -692,7 +718,7 @@ export default class SettingsPGService {
           id
         },
         data: {
-          ...data
+          ...data,
         }
       })
       this.response = responses.OK({data: updatedUserFeatureBan});

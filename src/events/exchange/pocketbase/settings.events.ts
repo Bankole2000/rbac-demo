@@ -257,8 +257,19 @@ const ROLE_PERMISSION_DELETED = async (data: any) => {
 const USER_FEATURE_BAN_CREATED = async (data: any) => {
   console.log('user feature ban created', data);
   let ufbData = sanitizeData(settingsPg.userFeatureBanFields, data.record)
-  const existingFeatures = await settingsPg.getFeatures({field: 'id', values: [ufbData.feature]})
-  console.log({existingFeatures, ufbData});
+  const existingFeature = (await settingsPg.getFeatures({field: 'id', values: [ufbData.feature]})).features
+  console.log({existingFeature, ufbData});
+  if(existingFeature) {
+    const feature = existingFeature[0];
+    ufbData.feature = feature.name
+  }
+  if(!existingFeature) return;
+  const existingUserFeatureBan = (await settingsPg.findUserFeatureBan({userId: ufbData.user, feature: ufbData.feature})).response?.data
+  if(existingUserFeatureBan){
+    await settingsPg.updateUserFeatureBan({id: existingUserFeatureBan.id, data: ufbData});
+  } else {
+    await settingsPg.createUserFeatureBan({userFeatureBanData: ufbData as unknown as Prisma.UserFeatureBanCreateInput});
+  }
 }
 
 const USER_FEATURE_BAN_DELETED = async (data: any) => {
@@ -266,6 +277,21 @@ const USER_FEATURE_BAN_DELETED = async (data: any) => {
 }
 
 const USER_FEATURE_BAN_UPDATED = async (data: any) => {
+  console.log('user feature ban created', data);
+  let ufbData = sanitizeData(settingsPg.userFeatureBanFields, data.record)
+  const existingFeature = (await settingsPg.getFeatures({field: 'id', values: [ufbData.feature]})).features
+  console.log({existingFeature, ufbData});
+  if(existingFeature) {
+    const feature = existingFeature[0];
+    ufbData.feature = feature.name
+  }
+  if(!existingFeature) return;
+  const existingUserFeatureBan = (await settingsPg.findUserFeatureBan({userId: ufbData.user, feature: ufbData.feature})).response?.data
+  if(existingUserFeatureBan){
+    await settingsPg.updateUserFeatureBan({id: existingUserFeatureBan.id, data: ufbData});
+  } else {
+    await settingsPg.createUserFeatureBan({userFeatureBanData: ufbData as unknown as Prisma.UserFeatureBanCreateInput});
+  }
   console.log('user feature ban updated', data);
 }
 

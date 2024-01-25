@@ -36,8 +36,8 @@ model User {
   email         String?              @unique
   verified      Boolean?             @default(false) @db.Boolean
   username      String?              @unique
-  phone            String?
-  phoneData        Json?              @default("{}") @db.Json
+  phone         String?
+  phoneData     Json?                @default("{}") @db.Json
   name          String?
   roles         Role[]               @relation("UserHasRoles")
   accounts      Account[]
@@ -205,12 +205,15 @@ model RolePermission {
 }
 
 model UserFeatureBan {
-  id          String   @unique
-  userData    User     @relation(fields: [user], references: [id])
+  id          String    @unique
+  userData    User      @relation(fields: [user], references: [id])
   user        String
-  featureData Feature  @relation(fields: [feature], references: [name])
+  featureData Feature   @relation(fields: [feature], references: [name])
   feature     String
-  expiresAt   DateTime
+  counter     Int       @default(1)
+  expiresAt   DateTime?
+  created   DateTime  @default(now())
+  updated   DateTime  @updatedAt
 
   @@id([user, feature])
 }

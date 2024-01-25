@@ -7,6 +7,6 @@ const settingsRouter = Router();
 
 settingsRouter.get('/banks', checkFeatureFlag({feature: 'LOGIN', flag: 'EMAIL'}), getBanksHandler);
 settingsRouter.get('/roles', checkFeatureFlag({feature: 'LOGIN', flag: 'EMAIL'}), getUserRolesHandler);
-settingsRouter.get('/settings', getAppSettingsHandler);
+settingsRouter.get('/settings', checkFeatureFlag({feature: 'LOGIN', flag: 'EMAIL'}), getAppSettingsHandler);
 
 export default settingsRouter
